@@ -1,26 +1,31 @@
 #ifndef TCPGECKO_RETAINS_VARS_H_
 #define TCPGECKO_RETAINS_VARS_H_
 #include <gctypes.h>
+#include "dynamic_libs/os_types.h"
+#include "tcpgecko_defs.h"
 
-// The dynamically allocated buffer size for the image copy
-#define IMAGE_BUFFER_SIZE 100
 
-// The time the producer and consumer wait while there is nothing to do
-#define WAITING_TIME_MILLISECONDS 1
+class TCPGeckoRetainVars{
+    friend class TCPGecko;
+private:
+    static void setShouldTakeScreenShot(bool value);
 
-// Flag for telling the hook whether to dump a screen shot
-extern bool tcpg_shouldTakeScreenShot;
+    static OSThread * getThreadPointer();
 
-// Indication for the consumer how many bytes are there to read in total
-extern u32 tcpg_totalImageSize;
+    static void* getThreadStackPointer();
 
-// Indication for the consumer how many bytes are left to read
-extern u32 tcpg_remainingImageSize;
+    static u32 getThreadStackSize();
 
-// Indication for the consumer how many bytes can be read from the buffer at once
-extern s32 tcpg_bufferedImageSize;
+    static void setCodeHandlerInstalled(bool val);
 
-// The actual image data buffer for the consumer to consume
-extern void * tcpg_bufferedImageData;
+    static screenshotBufferInfo* getScreenshotBuffer();
 
+    static void resetThread();
+
+    static bool isCodeHandlerInstalled();
+
+    static void setSDCheatsEnabled(bool val);
+
+    static bool areSDCheatsEnabled();
+};
 #endif // TCPGECKO_RETAINS_VARS_H_

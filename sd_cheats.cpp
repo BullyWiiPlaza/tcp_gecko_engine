@@ -7,6 +7,7 @@
 #include "../utils/logger.h"
 #include "../dynamic_libs/os_functions.h"
 #include "tcp_gecko.h"
+#include "sd_cheats.h"
 #include "tcpgecko_common.h"
 #include "../kernel/syscalls.h"
 
@@ -17,7 +18,7 @@ u64 cachedTitleID;
 
 unsigned char *kernelCopyBufferOld2[DATA_BUFFER_SIZE];
 
-void kernelCopyData2(unsigned char *destinationBuffer, unsigned char *sourceBuffer, unsigned int length) {
+static void kernelCopyData2(unsigned char *destinationBuffer, unsigned char *sourceBuffer, unsigned int length) {
 	if (length > DATA_BUFFER_SIZE) {
 		OSFatal("Kernel copy buffer size exceeded");
 	}
@@ -29,7 +30,7 @@ void kernelCopyData2(unsigned char *destinationBuffer, unsigned char *sourceBuff
 	DCFlushRange(destinationBuffer, (u32) length);
 }
 
-void setCodeHandlerEnabled(bool enabled) {
+static void setCodeHandlerEnabled(bool enabled) {
 	unsigned int *codeHandlerEnabled = (unsigned int *) CODE_HANDLER_ENABLED_ADDRESS;
 	*codeHandlerEnabled = (unsigned int) enabled;
 	log_printf("Code handler status: %i\n", enabled);
@@ -54,7 +55,7 @@ void setCodeHandlerEnabled(bool enabled) {
 }*/
 
 
-int tcpg_LoadFileToMem(const char *filepath, u8 **inbuffer, u32 *size) {
+int SDCheats::LoadFileToMem(const char *filepath, u8 **inbuffer, u32 *size) {
 	// Always initialize input
 	*inbuffer = NULL;
 	if (size)
@@ -103,7 +104,7 @@ int tcpg_LoadFileToMem(const char *filepath, u8 **inbuffer, u32 *size) {
 	return filesize;
 }
 
-bool shouldLoadSDCheats() {
+bool SDCheats::shouldLoadSDCheats() {
 	u64 currentTitleID = OSGetTitleID();
 
 	// testMount();
@@ -118,7 +119,7 @@ bool shouldLoadSDCheats() {
 	return false;
 }
 
-int applySDCheats(const char * basePath){
+bool SDCheats::applySDCheats(const char * basePath){
     u64 currentTitleID = OSGetTitleID();
     // Construct the file path
     char filePath[FS_MAX_ENTNAME_SIZE];
@@ -129,13 +130,13 @@ int applySDCheats(const char * basePath){
 
     unsigned char *codes = NULL;
     u32 codesSize = 0;
-    s32 result = tcpg_LoadFileToMem((const char *) filePath, &codes, &codesSize);
+    s32 result = SDCheats::LoadFileToMem((const char *) filePath, &codes, &codesSize);
 
     if (result < 0) {
         log_printf("LoadFileToMem() error: %i\n", result);
         setCodeHandlerEnabled(false);
         // Error, we won't write any codes
-        return -1;
+        return false;
     }
 
     log_print("Copying...\n");
@@ -143,5 +144,5 @@ int applySDCheats(const char * basePath){
     log_print("Copied!\n");
     setCodeHandlerEnabled(true);
 
-    return 0;
+    return true;
 }

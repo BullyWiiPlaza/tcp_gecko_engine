@@ -1,14 +1,14 @@
 #include "../dynamic_libs/os_functions.h"
 #include "title.h"
 
-bool isRunningTitleID(unsigned long long int japaneseTitleID) {
+static bool isRunningTitleID(unsigned long long int japaneseTitleID) {
 	u64 currentTitleID = OSGetTitleID();
 	return currentTitleID == japaneseTitleID // JAP
 		   || currentTitleID == japaneseTitleID + 0x100 // USA
 		   || currentTitleID == japaneseTitleID + 0x200; // EUR
 }
 
-bool isRunningAllowedTitleID() {
+bool TitleUtils::isRunningAllowedTitleID() {
 	return OSGetTitleID != 0
 		   && !isRunningTitleID(TITLE_ID_MII_VERSE)
 		   && !isRunningTitleID(TITLE_ID_MII_MAKER)
