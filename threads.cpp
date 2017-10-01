@@ -5,30 +5,31 @@
 
 struct node *getAllThreads() {
 	struct node *threads = NULL;
-	OSThread * currentThreadAddress = OSGetCurrentThread();
-	log_printf("Thread address: %08x\n", currentThreadAddress);
-	OSThread * iterationThreadAddress = currentThreadAddress;
-	int temporaryThreadAddress;
+	OSThread * currentThread = OSGetCurrentThread();
+	log_printf("Thread address: %08x\n", currentThread);
+	OSThread * iterationThread = currentThread;
+	OSThread * temporaryThread;
 
 	// Follow "previous thread" pointers back to the beginning
-	while ((temporaryThreadAddress = *(int *) (iterationThreadAddress + PREVIOUS_THREAD)) != 0) {
-		log_printf("Temporary thread address going backwards: %08x\n", temporaryThreadAddress);
-		iterationThreadAddress = (OSThread *) temporaryThreadAddress;
+	while ((temporaryThread = iterationThread->linkActive.prev) != 0) {
+		log_printf("Temporary thread address going backwards: %08x\n", temporaryThread);
+		iterationThread = temporaryThread;
 	}
 
 	// Now iterate over all threads
-	while ((temporaryThreadAddress = *(int *) (iterationThreadAddress + NEXT_THREAD)) != 0) {
+	while ((temporaryThread = iterationThread->linkActive.next) != 0) {
 		// Grab the thread's address
-		log_printf("Temporary thread address going forward: %08x\n", temporaryThreadAddress);
-		threads = insert(threads, (void *) iterationThreadAddress);
-		log_printf("Inserted: %08x\n", iterationThreadAddress);
-		iterationThreadAddress = (OSThread *) temporaryThreadAddress;
+		log_printf("Temporary thread address going forward: %08x\n", temporaryThread);
+		threads = insert(threads, (void *) iterationThread);
+		log_printf("Inserted: %08x\n", iterationThread);
+		iterationThread = temporaryThread;
 	}
 
 	// The previous while would skip the last thread so add it as well
-	threads = insert(threads, (void *) iterationThreadAddress);
-	log_printf("Inserted: %08x\n", iterationThreadAddress);
+	threads = insert(threads, (void *) iterationThread);
+	log_printf("Inserted: %08x\n", iterationThread);
 
+	// The list still has to be reversed to be in correct order
 	reverse(&threads);
 
 	return threads;

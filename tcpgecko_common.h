@@ -8,7 +8,7 @@ extern "C" {
 #define CODE_HANDLER_INSTALL_ADDRESS 0x010F4000
 
 #define CODE_FOLDER                 "codes"
-#define CODEFILE_EXTENSION          ".gctu"
+#define CODEFILE_EXTENSION          "gctu"
 
 #ifndef MEM_BASE
     #define MEM_BASE                    (0x00800000)
