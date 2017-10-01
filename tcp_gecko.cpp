@@ -1355,56 +1355,59 @@ int TCPGecko::processCommands(int clientfd) {
 	return 0;
 }
 
-int sockfd = -1, clientfd = -1, ret = 0, len;
-struct sockaddr_in socketAddress;
 
-int TCPGecko::runTCPGeckoServer(int argc, void *argv) {
-    log_printf("TCPGeckoServer Thread running\n");
-	setup_os_exceptions();
-	socket_lib_init();
+
+s32 TCPGecko::runTCPGeckoServer(s32 argc, void *argv) {
+    DEBUG_FUNCTION_LINE("TCPGeckoServer Thread running\n");
+	//setup_os_exceptions();
+	//socket_lib_init();
+
+	int sockfd = -1, clientfd = -1, ret = 0, len;
+
+	struct sockaddr_in socketAddress;
 
 	while (true) {
 		socketAddress.sin_family = AF_INET;
 		socketAddress.sin_port = 7331;
 		socketAddress.sin_addr.s_addr = 0;
 
-		log_printf("socket()...\n");
+		DEBUG_FUNCTION_LINE("socket()...\n");
 		sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		CHECK_ERROR(sockfd == -1)
 
-		log_printf("bind()...\n");
+		DEBUG_FUNCTION_LINE("bind()...\n");
 		ret = bind(sockfd, (struct sockaddr *) &socketAddress, (s32) 16);
 		CHECK_ERROR(ret < 0)
 
-		log_printf("listen()...\n");
+		DEBUG_FUNCTION_LINE("listen()...\n");
 		ret = listen(sockfd, (s32) 20);
 		CHECK_ERROR(ret < 0)
 
 		while (true) {
 			len = 16;
-			log_printf("before accept()...\n");
+			DEBUG_FUNCTION_LINE("before accept()...\n");
 			clientfd = accept(sockfd, (struct sockaddr *) &socketAddress, (s32 * ) & len);
-			log_printf("after accept()...\n");
+			DEBUG_FUNCTION_LINE("after accept()...\n");
 			CHECK_ERROR(clientfd == -1)
-			log_printf("commands()...\n");
+			DEBUG_FUNCTION_LINE("commands()...\n");
 			ret = TCPGecko::processCommands(clientfd);
 			CHECK_ERROR(ret < 0)
 			socketclose(clientfd);
 			clientfd = -1;
 
-			log_printf("GX2WaitForVsync() inner...\n");
+			DEBUG_FUNCTION_LINE("GX2WaitForVsync() inner...\n");
 			GX2WaitForVsync();
 		}
 
 		error:
-		log_printf("error, closing connection...\n");
+		DEBUG_FUNCTION_LINE("error, closing connection...\n");
 		if (clientfd != -1)
 			socketclose(clientfd);
 		if (sockfd != -1)
 			socketclose(sockfd);
 
 		// Fix the console freezing when e.g. going to the friend list
-		log_printf("GX2WaitForVsync() outer...\n");
+		DEBUG_FUNCTION_LINE("GX2WaitForVsync() outer...\n");
 		GX2WaitForVsync();
 	}
 
@@ -1419,48 +1422,57 @@ void TCPGecko::installCodeHandler() {
 }
 
 s32 TCPGecko::startTCPGeckoThread(s32 argc, void *argv) {
-	log_print("In TCP Gecko thread...\n");
+	DEBUG_FUNCTION_LINE("In TCP Gecko thread...\n");
 
-    TCPGecko::resetThread();
-    OSThread* threadPtr = TCPGecko::getThreadPointer();
-    void* threadStack = TCPGecko::getThreadStackPointer();
     u32 threadStackSize = TCPGecko::getThreadStackSize();
 
-	if (OSCreateThread(threadPtr, (s32 (*)(s32, void *)) TCPGecko::runTCPGeckoServer, 0, NULL,
+    // TODO: free this.
+    unsigned int threadStack = (unsigned int) memalign(0x40, threadStackSize);
+	ASSERT_ALLOCATED(threadStack, "TCP Gecko stack")
+	OSThread *threadPtr = (OSThread *) memalign(0x40, 0x1000);
+	ASSERT_ALLOCATED(threadPtr, "TCP Gecko thread")
+
+    /*
+    DEBUG_FUNCTION_LINE("threadPtr %08X\n",threadPtr);
+    DEBUG_FUNCTION_LINE("threadStack %08X\n",threadStack);
+    DEBUG_FUNCTION_LINE("threadStackSize %08X\n",threadStackSize);*/
+
+	if (OSCreateThread(threadPtr, TCPGecko::runTCPGeckoServer, 0, NULL,
 					   (u32) threadStack + threadStackSize,
 					   threadStackSize, 0,
 					   0xc) == 1) {
 		OSResumeThread(threadPtr);
+		DEBUG_FUNCTION_LINE("TCP Gecko Server thread started...\n");
+	}else{
+        DEBUG_FUNCTION_LINE("Creating TCP Gecko Server thread failed...\n");
 	}
 
-	log_print("TCP Gecko Server thread started...\n");
-
 	// Execute the code handler if it is installed
-	if (isCodeHandlerInstalled) {
-		log_print("Code handler installed...\n");
+	if (TCPGecko::isCodeHandlerInstalled()) {
+		DEBUG_FUNCTION_LINE("Code handler is installed...\n");
 		void (*codeHandlerFunction)() = (void (*)()) CODE_HANDLER_INSTALL_ADDRESS;
 
 		while (true) {
 			os_usleep(9000);
 
 			// considerApplyingSDCheats();
-			// log_print("Running code handler...\n");
+			//log_print("Running code handler...\n");
 			codeHandlerFunction();
-			// log_print("Code handler done executing...\n");
+			//log_print("Code handler done executing...\n");
 
 			if (assemblySize > 0) {
 				executeAssembly();
 			}
 		}
 	} else {
-		log_print("Code handler not installed...\n");
+		DEBUG_FUNCTION_LINE("Code handler is not installed...\n");
 	}
 
 	return (s32) 0;
 }
 
 void TCPGecko::startTCPGecko() {
-	log_print("Starting TCP Gecko...\n");
+	DEBUG_FUNCTION_LINE("Starting TCP Gecko...\n");
 
 	// Force the debugger to be initialized by default
 	// writeInt((unsigned int) (OSIsDebuggerInitialized + 0x1C), 0x38000001); // li r3, 1
@@ -1471,7 +1483,7 @@ void TCPGecko::startTCPGecko() {
 	OSThread *thread = (OSThread *) memalign(0x40, 0x1000);
 	ASSERT_ALLOCATED(thread, "TCP Gecko thread")
 
-	int status = OSCreateThread(thread, TCPGecko::startTCPGeckoThread, (s32) 1,
+	int status = OSCreateThread(thread, TCPGecko::startTCPGeckoThread, (s32) 0,
 								NULL, (s32)(stack + sizeof(stack)),
 								sizeof(stack), 0,
 								(OS_THREAD_ATTR_AFFINITY_CORE1 | OS_THREAD_ATTR_PINNED_AFFINITY |
@@ -1480,5 +1492,9 @@ void TCPGecko::startTCPGecko() {
 	// OSSetThreadName(thread, "TCP Gecko");
 	OSResumeThread(thread);
 
-	log_print("TCP Gecko started...\n");
+	DEBUG_FUNCTION_LINE("TCP Gecko started...\n");
+}
+
+void TCPGecko::stopAndCleanupTCPGecko() {
+    //TODO: free all allocs, stop all threads etc.
 }

@@ -14,6 +14,7 @@
 class TCPGecko{
 public:
     static void startTCPGecko(void);
+    static void stopAndCleanupTCPGecko(void);
 
     static void installCodeHandler();
 
@@ -60,7 +61,7 @@ public:
 
 private:
     static int processCommands(int clientfd);
-    static int runTCPGeckoServer(int argc, void *argv);
+    static s32 runTCPGeckoServer(s32 argc, void *argv);
     static s32 startTCPGeckoThread(s32 argc, void *argv);
     static void reportIllegalCommandByte(int commandByte);
     static void considerInitializingFileSystem();
@@ -78,20 +79,8 @@ private:
         getScreenshotBuffer()->shouldTakeScreenShot = value;
     }
 
-    static void resetThread(){
-        TCPGeckoRetainVars::resetThread();
-    }
-
-    static OSThread * getThreadPointer(){
-        return TCPGeckoRetainVars::getThreadPointer();
-    }
-
-    static void* getThreadStackPointer(){
-        return TCPGeckoRetainVars::getThreadStackPointer();
-    }
-
     static u32 getThreadStackSize(){
-        return TCPGeckoRetainVars::getThreadStackSize();
+        return TCPGECKO_THREAD_STACKSIZE;
     }
 
     //static void writeScreen(char message[100], int secondsDelay);
