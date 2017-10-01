@@ -1359,6 +1359,7 @@ int sockfd = -1, clientfd = -1, ret = 0, len;
 struct sockaddr_in socketAddress;
 
 int TCPGecko::runTCPGeckoServer(int argc, void *argv) {
+    log_printf("TCPGeckoServer Thread running\n");
 	setup_os_exceptions();
 	socket_lib_init();
 
@@ -1418,7 +1419,7 @@ void TCPGecko::installCodeHandler() {
 }
 
 s32 TCPGecko::startTCPGeckoThread(s32 argc, void *argv) {
-	log_print("Starting TCP Gecko thread...\n");
+	log_print("In TCP Gecko thread...\n");
 
     TCPGecko::resetThread();
     OSThread* threadPtr = TCPGecko::getThreadPointer();
@@ -1432,7 +1433,7 @@ s32 TCPGecko::startTCPGeckoThread(s32 argc, void *argv) {
 		OSResumeThread(threadPtr);
 	}
 
-	log_print("TCP Gecko thread started...\n");
+	log_print("TCP Gecko Server thread started...\n");
 
 	// Execute the code handler if it is installed
 	if (isCodeHandlerInstalled) {
