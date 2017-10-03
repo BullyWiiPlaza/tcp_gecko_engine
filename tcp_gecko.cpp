@@ -577,7 +577,7 @@ int TCPGecko::processCommands(int clientfd) {
 					while (bufferPosition <= DATA_BUFFER_SIZE) {
 						// Wait for data to be available
 						while (screenBufInfo->bufferedImageSize == 0) {
-							os_usleep(TCPGECKO_WAITING_TIME_MILLISECONDS);
+							os_usleep(100);
 						}
 
 						memcpy(buffer + bufferPosition, screenBufInfo->bufferedImageData, screenBufInfo->bufferedImageSize);

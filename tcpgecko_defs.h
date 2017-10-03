@@ -21,12 +21,6 @@
 
 #define TCPGECKO_THREAD_STACKSIZE   0x6F00
 
-// The dynamically allocated buffer size for the image copy
-#define TCPGECKO_IMAGE_BUFFER_SIZE 100
-
-// The time the producer and consumer wait while there is nothing to do
-#define TCPGECKO_WAITING_TIME_MILLISECONDS 1
-
 /**
  *  @brief
  */
