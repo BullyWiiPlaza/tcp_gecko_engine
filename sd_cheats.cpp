@@ -8,7 +8,6 @@
 #include "../dynamic_libs/os_functions.h"
 #include "tcp_gecko.h"
 #include "sd_cheats.h"
-#include "tcpgecko_common.h"
 #include "../kernel/syscalls.h"
 
 #define CODE_HANDLER_ENABLED_ADDRESS 0x10014CFC
@@ -104,44 +103,22 @@ int SDCheats::LoadFileToMem(const char *filepath, u8 **inbuffer, u32 *size) {
 	return filesize;
 }
 
-bool SDCheats::shouldLoadSDCheats() {
-	u64 currentTitleID = OSGetTitleID();
-
-	// testMount();
-
-	if (cachedTitleID == currentTitleID) {
-		// log_print("Title ID NOT changed\n");
-	} else {
-	    log_print("Title ID changed\n");
-	    cachedTitleID = currentTitleID;
-	    return true;
-	}
-	return false;
-}
-
-bool SDCheats::applySDCheats(const char * basePath){
-    u64 currentTitleID = OSGetTitleID();
-    // Construct the file path
-    char filePath[FS_MAX_ENTNAME_SIZE];
-    memset(filePath, '0', sizeof(filePath));
-    snprintf(filePath,FS_MAX_ENTNAME_SIZE,"%s/%s/%llX.%s",basePath,CODE_FOLDER,currentTitleID,CODEFILE_EXTENSION);
-    log_printf("Title ID: %llX\n", currentTitleID);
-    log_printf("File Path: %s\n", filePath);
-
+bool SDCheats::applySDCheats(const char * filePath){
+    if(filePath == NULL || *filePath == 0) return false;
     unsigned char *codes = NULL;
     u32 codesSize = 0;
     s32 result = SDCheats::LoadFileToMem((const char *) filePath, &codes, &codesSize);
 
     if (result < 0) {
-        log_printf("LoadFileToMem() error: %i\n", result);
+        DEBUG_FUNCTION_LINE("LoadFileToMem() error: %i\n", result);
         setCodeHandlerEnabled(false);
         // Error, we won't write any codes
         return false;
     }
 
-    log_print("Copying...\n");
+    DEBUG_FUNCTION_LINE("Copying...\n");
     kernelCopyData2((unsigned char *) CODE_LIST_START_ADDRESS, codes, (unsigned int) codesSize);
-    log_print("Copied!\n");
+    DEBUG_FUNCTION_LINE("Copied!\n");
     setCodeHandlerEnabled(true);
 
     return true;

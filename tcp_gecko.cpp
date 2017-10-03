@@ -14,7 +14,6 @@
 #include "../utils/logger.h"
 
 #include "tcpgecko_net.h"
-#include "tcpgecko_common.h"
 #include "tcpgecko_retainvars.h"
 #include "hardware_breakpoints.hpp"
 #include "linked_list.h"
@@ -577,7 +576,7 @@ int TCPGecko::processCommands(int clientfd) {
 					while (bufferPosition <= DATA_BUFFER_SIZE) {
 						// Wait for data to be available
 						while (screenBufInfo->bufferedImageSize == 0) {
-							os_usleep(WAITING_TIME_MILLISECONDS);
+							os_usleep(TCPGECKO_WAITING_TIME_MILLISECONDS);
 						}
 
 						memcpy(buffer + bufferPosition, screenBufInfo->bufferedImageData, screenBufInfo->bufferedImageSize);
@@ -924,7 +923,7 @@ int TCPGecko::processCommands(int clientfd) {
 				break;
 			}
 			case COMMAND_GET_CODE_HANDLER_ADDRESS: {
-				((int *) buffer)[0] = CODE_HANDLER_INSTALL_ADDRESS;
+				((int *) buffer)[0] = TCPGecko::getCodeHandlerInstallAddress();
 				ret = TCPGeckoNet::sendwait(clientfd, buffer, 4);
 				ASSERT_FUNCTION_SUCCEEDED(ret, "sendwait (code handler address)")
 
@@ -1415,9 +1414,9 @@ s32 TCPGecko::runTCPGeckoServer(s32 argc, void *argv) {
 }
 
 void TCPGecko::installCodeHandler() {
-	unsigned int physicalCodeHandlerAddress = (unsigned int) OSEffectiveToPhysical((void *) CODE_HANDLER_INSTALL_ADDRESS);
+	unsigned int physicalCodeHandlerAddress = (unsigned int) OSEffectiveToPhysical((void *) TCPGecko::getCodeHandlerInstallAddress());
 	SC0x25_KernelCopyData((u32) physicalCodeHandlerAddress, (unsigned int) TCPGecko::getCodeHandlerAddress(), TCPGecko::getCodeHandlerLength());
-	DCFlushRange((const void *) CODE_HANDLER_INSTALL_ADDRESS, (u32) TCPGecko::getCodeHandlerLength());
+	DCFlushRange((const void *) TCPGecko::getCodeHandlerInstallAddress(), (u32) TCPGecko::getCodeHandlerLength());
 	TCPGecko::setCodeHandlerInstalled(true);
 }
 
@@ -1450,7 +1449,7 @@ s32 TCPGecko::startTCPGeckoThread(s32 argc, void *argv) {
 	// Execute the code handler if it is installed
 	if (TCPGecko::isCodeHandlerInstalled()) {
 		DEBUG_FUNCTION_LINE("Code handler is installed...\n");
-		void (*codeHandlerFunction)() = (void (*)()) CODE_HANDLER_INSTALL_ADDRESS;
+		void (*codeHandlerFunction)() = (void (*)()) TCPGecko::getCodeHandlerInstallAddress();
 
 		while (true) {
 			os_usleep(9000);

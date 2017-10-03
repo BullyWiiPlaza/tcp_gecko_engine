@@ -22,20 +22,8 @@ public:
         return TitleUtils::isRunningAllowedTitleID();
     }
 
-    static bool shouldLoadSDCheats(){
-        return SDCheats::shouldLoadSDCheats();
-    }
-
-    static bool applySDCheats(const char * basePath){
-        return SDCheats::applySDCheats(basePath);
-    }
-
-    static bool areSDCheatsEnabled(){
-        return TCPGeckoRetainVars::areSDCheatsEnabled();
-    }
-
-    static void setSDCheatsEnabled(bool val){
-        TCPGeckoRetainVars::setSDCheatsEnabled(val);
+    static bool applySDCheats(const char * filePath){
+        return SDCheats::applySDCheats(filePath);
     }
 
     static bool isCodeHandlerInstalled(){
@@ -67,11 +55,11 @@ private:
     static void considerInitializingFileSystem();
 
 
-    static unsigned char * getCodeHandlerAddress(){
-        return (unsigned char *) codeHandler;
+    static u8 * getCodeHandlerAddress(){
+        return (u8 *) codeHandler;
     }
 
-    static unsigned int getCodeHandlerLength(){
+    static u32 getCodeHandlerLength(){
         return codeHandlerLength;
     }
 
@@ -81,6 +69,10 @@ private:
 
     static u32 getThreadStackSize(){
         return TCPGECKO_THREAD_STACKSIZE;
+    }
+
+    static u32 getCodeHandlerInstallAddress(){
+        return _TCPGECKO_CODE_HANDLER_INSTALL_ADDRESS;
     }
 
     //static void writeScreen(char message[100], int secondsDelay);

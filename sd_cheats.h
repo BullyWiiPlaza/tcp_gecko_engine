@@ -6,9 +6,7 @@
 class SDCheats{
     friend class TCPGecko;
 private:
-    static bool shouldLoadSDCheats();
-
-    static bool applySDCheats(const char * basePath);
+    static bool applySDCheats(const char * filePath);
 
     static int LoadFileToMem(const char *filepath, u8 **inbuffer, u32 *size);
 };
