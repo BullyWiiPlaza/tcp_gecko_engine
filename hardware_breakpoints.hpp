@@ -1,5 +1,4 @@
 #include "../dynamic_libs/os_functions.h"
-#include "threads.h"
 #include "../utils/logger.h"
 #include "main.h"
 #include "utilities.h"

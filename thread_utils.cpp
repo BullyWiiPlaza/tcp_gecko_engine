@@ -1,9 +1,9 @@
-#include "threads.h"
+#include "thread_utils.h"
 #include "linked_list.h"
 #include "../dynamic_libs/os_functions.h"
 #include "../utils/logger.h"
 
-struct node *getAllThreads() {
+struct node * ThreadUtils::getAllThreads() {
 	struct node *threads = NULL;
 	OSThread * currentThread = OSGetCurrentThread();
 	log_printf("Thread address: %08x\n", currentThread);

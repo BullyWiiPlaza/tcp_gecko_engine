@@ -10,7 +10,6 @@
 #include "tcpgecko_retainvars.h"
 #include "tcpgecko_defs.h"
 
-
 class TCPGecko{
 public:
     static void startTCPGecko(void);

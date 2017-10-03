@@ -15,6 +15,7 @@
 
 #include "tcpgecko_net.h"
 #include "tcpgecko_retainvars.h"
+#include "thread_utils.h"
 #include "hardware_breakpoints.hpp"
 #include "linked_list.h"
 #include "address.h"
@@ -930,7 +931,7 @@ int TCPGecko::processCommands(int clientfd) {
 				break;
 			}
 			case COMMAND_READ_THREADS: {
-				struct node *threads = getAllThreads();
+				struct node *threads = ThreadUtils::getAllThreads();
 				int threadCount = length(threads);
 				log_printf("Thread Count: %i\n", threadCount);
 
@@ -946,9 +947,9 @@ int TCPGecko::processCommands(int clientfd) {
 					int data = (int) currentThread->data;
 					log_printf("Thread data: %08x\n", data);
 					((int *) buffer)[0] = (int) currentThread->data;
-					memcpy(buffer + sizeof(int), currentThread->data, THREAD_SIZE);
+					memcpy(buffer + sizeof(int), currentThread->data, sizeof(OSThread));
 					log_print("Sending node...\n");
-					ret = TCPGeckoNet::sendwait(clientfd, buffer, sizeof(int) + THREAD_SIZE);
+					ret = TCPGeckoNet::sendwait(clientfd, buffer, sizeof(int) + sizeof(OSThread));
 					ASSERT_FUNCTION_SUCCEEDED(ret, "sendwait (thread address and data)")
 
 					currentThread = currentThread->next;
